@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wi-Fi Security Academy: MI6 HQ Edition</title>
+    <style>
+        :root {
+            --bg-dark: #090d16;
+            --card-bg: rgba(19, 28, 46, 0.88);
+            --accent-green: #10b981;
+            --accent-blue: #3b82f6;
+            --accent-red: #ef4444;
+            --accent-gold: #f59e0b;
+            --accent-purple: #8b5cf6;
+            --text-light: #f8fafc;
+            --text-dim: #94a3b8;
+        }
+
+        /* 50% Opacity Background Overlay */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: url('007bg.jpg') no-repeat center center fixed;
+            background-size: cover;
+            opacity: 0.5;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .header {
+            max-width: 1000px;
+            text-align: center;
+            margin-bottom: 20px;
+            position: relative;
+            width: 100%;
+        }
+
+        .header h1 {
+            color: var(--accent-green);
+            font-size: 2.2rem;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.8);
+        }
+
+        .audio-control {
+            position: absolute;
+            right: 10px;
+            top: 10px;
+            background: rgba(15, 23, 42, 0.9);
+            border: 1px solid var(--accent-blue);
+            color: var(--text-light);
+            padding: 8px 14px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+            max-width: 1000px;
+            width: 100%;
+        }
+
+        @media (min-width: 768px) {
+            .container {
+                grid-template-columns: 1fr 1fr;
+            }
+            .full-width {
+                grid-column: span 2;
+            }
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            backdrop-filter: blur(8px);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        label {
+            font-weight: bold;
+            color: var(--accent-blue);
+        }
+
+        select, button {
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #334155;
+            background-color: #090d16;
+            color: white;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+
+        .btn-launch {
+            flex: 2;
+            background-color: var(--accent-green);
+            color: #090d16;
+            font-weight: bold;
+            border: none;
+            transition: all 0.2s ease;
+        }
+
+        .btn-launch:hover {
+            background-color: #34d399;
+            transform: translateY(-2px);
+        }
+
+        .btn-pause {
+            flex: 1;
+            background-color: var(--accent-gold);
+            color: #090d16;
+            font-weight: bold;
+            border: none;
+            transition: all 0.2s ease;
+        }
+
+        .btn-pause:hover {
+            background-color: #fcd34d;
+            transform: translateY(-2px);
+        }
+
+        .btn-reset {
+            flex: 1;
+            background-color: #334155;
+            color: white;
+            font-weight: bold;
+            border: none;
+            transition: all 0.2s ease;
+        }
+
+        .btn-reset:hover {
+            background-color: #475569;
+            transform: translateY(-2px);
+        }
+
+        /* Airwaves Stage */
+        .stage {
+            position: relative;
+            height: 240px;
+            background: radial-gradient(circle, rgba(19, 28, 46, 0.9) 0%, rgba(9, 13, 22, 0.95) 100%);
+            border-radius: 10px;
+            border: 2px dashed #334155;
+            overflow: hidden;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 30px;
+        }
+
+        .node {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 2;
+        }
+
+        .node-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.6rem;
+            background-color: #1e2d4a;
+            border: 2px solid var(--accent-blue);
+        }
+
+        .node-label {
+            margin-top: 6px;
+            font-weight: bold;
+            font-size: 0.8rem;
+            text-align: center;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+        }
+
+        .enemy-node {
+            position: absolute;
+            bottom: 10px;
+            left: 35%;
+            transform: translateX(-50%);
+        }
+
+        /* Labeled Golden Packet */
+        .packet {
+            position: absolute;
+            min-width: 90px;
+            height: 38px;
+            padding: 0 10px;
+            border-radius: 8px;
+            background-color: var(--accent-gold);
+            color: #090d16;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: 800;
+            font-size: 0.8rem;
+            letter-spacing: 0.5px;
+            left: 70px;
+            top: calc(50% - 19px);
+            z-index: 3;
+            transition: left 3s ease-in-out, top 2s ease-in-out;
+            box-shadow: 0 0 18px var(--accent-gold);
+            white-space: nowrap;
+            gap: 5px;
+        }
+
+        /* Spy Lair Terminal */
+        .lair-console {
+            background-color: rgba(5, 8, 17, 0.95);
+            border: 1px solid var(--accent-red);
+            border-radius: 8px;
+            padding: 15px;
+            font-family: 'Courier New', Courier, monospace;
+            color: #ef4444;
+            min-height: 160px;
+            margin-top: 15px;
+            position: relative;
+        }
+
+        .lair-header {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-dim);
+            border-bottom: 1px solid #1e2d4a;
+            padding-bottom: 5px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .status-box {
+            padding: 12px;
+            border-radius: 6px;
+            background-color: rgba(9, 13, 22, 0.9);
+            font-family: monospace;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            border-left: 4px solid var(--accent-blue);
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            font-size: 0.85rem;
+        }
+
+        .comparison-table th, .comparison-table td {
+            border: 1px solid #1e2d4a;
+            padding: 10px;
+            text-align: left;
+        }
+
+        .comparison-table th {
+            background-color: rgba(9, 13, 22, 0.9);
+            color: var(--accent-green);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+
+        .badge-auth { background-color: #8b5cf6; color: white; }
+        .badge-enc { background-color: #06b6d4; color: black; }
+        .badge-aaa { background-color: #f59e0b; color: black; }
+    </style>
+</head>
+<body>
+
+    <!-- Audio Elements -->
+    <audio id="bgMusic" src="goldeneye_007_watch.mp3" loop></audio>
+    <audio id="briefingSfx" src="objective_briefing.mp3"></audio>
+
+    <div class="header">
+        <button class="audio-control" onclick="toggleAudio()" id="audioBtn">🔊 Audio: On</button>
+        <h1>🕵️‍♂️ Wi-Fi Security Academy: MI6 HQ</h1>
+        <p>Visualizing How Opposing Spies Exploit & Crack Wi-Fi Protocols</p>
+    </div>
+
+    <div class="container">
+
+        <!-- Controls Card -->
+        <div class="card controls">
+            <h2>⚙️ Select Wi-Fi Protocol</h2>
+            
+            <div>
+                <label for="securityMode">Choose Network Defense Setup:</label>
+                <select id="securityMode" onchange="resetSimulation(); updateInfo();">
+                    <option value="enterprise">Enterprise 802.1X (RADIUS + AES - Individual Credentials)</option>
+                    <option value="wpa3">WPA3-Personal (SAE Auth + AES-GCMP Encryption)</option>
+                    <option value="wpa2">WPA2-Personal (PSK Auth + AES-CCMP Encryption)</option>
+                    <option value="wep">WEP (Obsolete RC4 Cipher - Weak IVs)</option>
+                    <option value="open">Open Network (No Encryption / Plain Text)</option>
+                </select>
+            </div>
+
+            <div id="protocolDetails" class="status-box"></div>
+
+            <div class="button-group">
+                <button class="btn-launch" id="launchBtn" onclick="runSimulation()">🚀 Launch Simulation</button>
+                <button class="btn-pause" id="pauseBtn" onclick="togglePause()" disabled>⏸️ Pause</button>
+                <button class="btn-reset" onclick="resetSimulation()">🔄 Reset</button>
+            </div>
+        </div>
+
+        <!-- Protocol Intelligence Card -->
+        <div class="card">
+            <h2>🏰 MI6 Protocol Intelligence</h2>
+            <div id="analogyText"></div>
+        </div>
+
+        <!-- Simulation Stage -->
+        <div class="card full-width">
+            <h2>📡 Live Airwaves Intercept Stage</h2>
+            <div class="stage">
+                <!-- Agent Device -->
+                <div class="node">
+                    <div class="node-icon">🕵️‍♂️</div>
+                    <div class="node-label">Agent 007</div>
+                </div>
+
+                <!-- Animated Labeled Data Packet -->
+                <div id="dataPacket" class="packet" style="display:none;">🛡️ ENTERPRISE</div>
+
+                <!-- Opposing Spy Interceptor -->
+                <div class="node enemy-node">
+                    <div class="node-icon" style="border-color: var(--accent-red);">🦹‍♂️</div>
+                    <div class="node-label">Opposing Spy</div>
+                </div>
+
+                <!-- Access Point Gatekeeper -->
+                <div class="node">
+                    <div class="node-icon" style="border-color: var(--accent-green);">🏰</div>
+                    <div class="node-label">Outpost Gate AP</div>
+                </div>
+
+                <!-- Central Command RADIUS Node -->
+                <div class="node" id="radiusNode">
+                    <div class="node-icon" style="border-color: var(--accent-purple);">🏛️</div>
+                    <div class="node-label">Central Command<br>(RADIUS Server)</div>
+                </div>
+            </div>
+
+            <!-- Opposing Spy Lair Terminal -->
+            <div class="lair-console">
+                <div class="lair-header">
+                    <span>🦹‍♂️ OPPOSING SPY LAIR TERMINAL (OFFLINE CRACKING MATRIX)</span>
+                    <span id="lairStatus">IDLE</span>
+                </div>
+                <div id="lairOutput">
+                    Select a protocol and press "Launch Simulation" to begin step-by-step intelligence gathering...
+                </div>
+            </div>
+        </div>
+
+        <!-- Technical Reference Table 1: SAE vs AES -->
+        <div class="card full-width">
+            <h2>⚔️ Technical Comparison: SAE vs. AES</h2>
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>Technology</th>
+                        <th>Role</th>
+                        <th>How It Works</th>
+                        <th>MI6 Spy Analogy</th>
+                        <th>Offline Dictionary Vulnerability</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>SAE</strong><br><small>(Simultaneous Auth of Equals)</small></td>
+                        <td><span class="badge badge-auth">Authentication</span></td>
+                        <td>Zero-knowledge proof handshake verifies identity without transmitting password hints.</td>
+                        <td>Dynamic verbal challenge giving zero mathematical clues to eavesdroppers.</td>
+                        <td><strong>IMMUNE.</strong> Taped handshakes contain no testable password signatures.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>AES</strong><br><small>(Advanced Encryption Standard)</small></td>
+                        <td><span class="badge badge-enc">Encryption</span></td>
+                        <td>Scrambles live data payload using 128-bit or 256-bit Rijndael block cipher.</td>
+                        <td>Indestructible titanium cipher box protecting airwave dispatches.</td>
+                        <td><strong>SECURE.</strong> Live stream payload cannot be decrypted via brute force.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Technical Reference Table 2: Centralized Enterprise AAA -->
+        <div class="card full-width">
+            <h2>🏛️ Enterprise Infrastructure Protocols (AAA)</h2>
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>Protocol / System</th>
+                        <th>Role</th>
+                        <th>Primary Focus</th>
+                        <th>MI6 Low-Tech Analogy</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>RADIUS</strong><br><small>(802.1X Auth Server)</small></td>
+                        <td><span class="badge badge-aaa">Central AAA</span></td>
+                        <td>Authenticates incoming network users & devices across all access points centrally.</td>
+                        <td>MI6 Central Command checking Agent 007's individual badge before letting him into outpost gates.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>TACACS+</strong><br><small>(Cisco AAA Protocol)</small></td>
+                        <td><span class="badge badge-aaa">Device Admin</span></td>
+                        <td>Separates Auth, Authz, and Accounting to manage network infrastructure devices (routers/switches).</td>
+                        <td>The High-Security Vault Overseer verifying Tech Engineers who configure fortress security systems.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Kerberos</strong><br><small>(Active Directory / Entra ID)</small></td>
+                        <td><span class="badge badge-auth">Single Sign-On</span></td>
+                        <td>Issues time-synchronized Ticket Granting Tickets (TGT) for seamless access across domain services.</td>
+                        <td>A time-stamped Security Clearance Pass stamped at shift start, flashed to enter Q-Branch or view emails.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+
+    <script>
+        const configs = {
+            enterprise: {
+                auth: "802.1X / RADIUS (EAP-TLS / PEAP)",
+                enc: "AES-CCMP / GCMP",
+                analogyAuth: "🏛️ <strong>802.1X / RADIUS:</strong> Agent 007 presents an individual ID badge/certificate. Outpost AP forwards request to Central Command (RADIUS) for AAA verification.",
+                analogyEnc: "🔒 <strong>AES Protection:</strong> Encrypted using individual session keys derived dynamically.",
+                enemyResult: "🛡️ ENTERPRISE FORTRESS SECURE: No shared PSK password exists to intercept or crack offline!"
+            },
+            wpa3: {
+                auth: "SAE (Simultaneous Auth of Equals)",
+                enc: "AES-GCMP (256-bit)",
+                analogyAuth: "🔑 <strong>SAE Handshake:</strong> Agent 007 and MI6 execute a zero-knowledge math challenge. No password clues exposed.",
+                analogyEnc: "🔒 <strong>AES Protection:</strong> Radio messages locked in a titanium cipher box.",
+                enemyResult: "🛡️ DEFENSE HOLDS: Zero-knowledge math leaves no recorded clues. Offline attacks impossible!"
+            },
+            wpa2: {
+                auth: "PSK (Pre-Shared Key)",
+                enc: "AES-CCMP (128-bit)",
+                analogyAuth: "🗝️ <strong>PSK Handshake:</strong> 007 & MI6 exchange random numbers mixed with shared passphrase signature.",
+                analogyEnc: "🔒 <strong>AES Protection:</strong> Live message body is encrypted with AES.",
+                enemyResult: "⚠️ HANDSHAKE CAPTURED: Live AES is safe, but tape recording allows offline dictionary testing in Evil Lair!"
+            },
+            wep: {
+                auth: "Shared Key (WEP)",
+                enc: "RC4 Cipher (Flawed IVs)",
+                analogyAuth: "📜 <strong>Weak Gatekeeper:</strong> Easily spoofed challenge logic.",
+                analogyEnc: "📦 <strong>Flawed Glue:</strong> Scrambling key math repeats constantly.",
+                enemyResult: "🚨 CRACKED IN SECONDS: Reused IV math reveals master key instantly!"
+            },
+            open: {
+                auth: "None",
+                enc: "None (Plaintext)",
+                analogyAuth: "🚪 <strong>Open Gate:</strong> No credentials required.",
+                analogyEnc: "📄 <strong>Unsealed Letter:</strong> Raw plain text floating in air.",
+                enemyResult: "💥 DIRECT BREACH: Read live passwords and browsing instantly!"
+            }
+        };
+
+        let queue = [];
+        let isPaused = false;
+        let currentTimer = null;
+        let bgAudioStarted = false;
+
+        function initAudio() {
+            const bgMusic = document.getElementById('bgMusic');
+            bgMusic.volume = 0.4;
+            bgMusic.play().then(() => {
+                bgAudioStarted = true;
+            }).catch(() => {
+                document.addEventListener('click', () => {
+                    if (!bgAudioStarted) {
+                        bgMusic.play();
+                        bgAudioStarted = true;
+                    }
+                }, { once: true });
+            });
+        }
+
+        window.addEventListener('load', initAudio);
+
+        function toggleAudio() {
+            const bgMusic = document.getElementById('bgMusic');
+            const audioBtn = document.getElementById('audioBtn');
+            if (bgMusic.paused) {
+                bgMusic.play();
+                audioBtn.innerHTML = "🔊 Audio: On";
+            } else {
+                bgMusic.pause();
+                audioBtn.innerHTML = "🔇 Audio: Muted";
+            }
+        }
+
+        function updateInfo() {
+            const mode = document.getElementById('securityMode').value;
+            const data = configs[mode];
+
+            document.getElementById('protocolDetails').innerHTML = `
+                <div><strong>Authentication:</strong> ${data.auth}</div>
+                <div><strong>Encryption:</strong> ${data.enc}</div>
+            `;
+
+            document.getElementById('analogyText').innerHTML = `
+                <p>${data.analogyAuth}</p>
+                <p>${data.analogyEnc}</p>
+                <div style="margin-top:10px; font-weight:bold; color:${mode==='wpa3'||mode==='enterprise'?'var(--accent-green)':mode==='wpa2'?'var(--accent-gold)':'var(--accent-red)'}">
+                    ${data.enemyResult}
+                </div>
+            `;
+        }
+
+        function clearQueue() {
+            if (currentTimer) clearTimeout(currentTimer);
+            currentTimer = null;
+            queue = [];
+            isPaused = false;
+            document.getElementById('pauseBtn').innerHTML = "⏸️ Pause";
+            document.getElementById('pauseBtn').disabled = true;
+        }
+
+        function resetSimulation() {
+            clearQueue();
+            const packet = document.getElementById('dataPacket');
+            const lairOutput = document.getElementById('lairOutput');
+            const lairStatus = document.getElementById('lairStatus');
+            const launchBtn = document.getElementById('launchBtn');
+
+            packet.style.display = "none";
+            packet.style.left = "70px";
+            packet.style.top = "calc(50% - 19px)";
+
+            lairStatus.innerHTML = "IDLE";
+            lairStatus.style.color = "var(--text-dim)";
+            lairOutput.innerHTML = "Select a protocol and press 'Launch Simulation' to begin step-by-step intelligence gathering...";
+            launchBtn.disabled = false;
+        }
+
+        function processQueue() {
+            if (isPaused || queue.length === 0) return;
+
+            const step = queue.shift();
+            step.action();
+
+            if (queue.length > 0) {
+                currentTimer = setTimeout(processQueue, step.delay);
+            } else {
+                document.getElementById('launchBtn').disabled = false;
+                document.getElementById('pauseBtn').disabled = true;
+            }
+        }
+
+        function togglePause() {
+            const pauseBtn = document.getElementById('pauseBtn');
+            const lairStatus = document.getElementById('lairStatus');
+
+            if (!isPaused) {
+                isPaused = true;
+                if (currentTimer) clearTimeout(currentTimer);
+                pauseBtn.innerHTML = "▶️ Resume";
+                lairStatus.innerHTML += " [PAUSED]";
+            } else {
+                isPaused = false;
+                pauseBtn.innerHTML = "⏸️ Pause";
+                lairStatus.innerHTML = lairStatus.innerHTML.replace(" [PAUSED]", "");
+                processQueue();
+            }
+        }
+
+        function addStep(action, delayAfter = 3800) {
+            queue.push({ action, delay: delayAfter });
+        }
+
+        function runSimulation() {
+            resetSimulation();
+
+            const briefingSfx = document.getElementById('briefingSfx');
+            briefingSfx.currentTime = 0;
+            briefingSfx.volume = 0.7;
+            briefingSfx.play();
+
+            const mode = document.getElementById('securityMode').value;
+            const packet = document.getElementById('dataPacket');
+            const lairOutput = document.getElementById('lairOutput');
+            const lairStatus = document.getElementById('lairStatus');
+            const launchBtn = document.getElementById('launchBtn');
+            const pauseBtn = document.getElementById('pauseBtn');
+
+            launchBtn.disabled = true;
+            pauseBtn.disabled = false;
+
+            packet.style.display = "flex";
+            packet.style.left = "70px";
+            packet.style.top = "calc(50% - 19px)";
+            packet.innerHTML = mode === 'enterprise' ? '🏛️ ENTERPRISE' : mode === 'wpa3' ? '🔐 WPA3' : mode === 'wpa2' ? '🔒 WPA2' : mode === 'wep' ? '📦 WEP' : '📄 OPEN';
+
+            // Step 1: Initialize Scan
+            addStep(() => {
+                lairStatus.innerHTML = "RECORDING AIRWAVES...";
+                lairStatus.style.color = "var(--accent-gold)";
+                lairOutput.innerHTML = "> [00:01] Listening on radio channels 2.4GHz / 5GHz...<br>> [00:03] Intercepting transmission between Agent 007 and Outpost Gate AP...";
+            }, 3500);
+
+            // Step 2: Packet Moves to Middle / Gate
+            addStep(() => {
+                packet.style.left = "350px";
+            }, 2500);
+
+            // Protocol-Specific Attack Steps
+            if (mode === 'enterprise') {
+                addStep(() => {
+                    lairStatus.innerHTML = "ANALYZING 802.1X TUNNEL...";
+                    lairStatus.style.color = "var(--accent-gold)";
+                    lairOutput.innerHTML += `<br><br>> [00:06] Agent 007 presents individual credential certificate to Outpost AP.`;
+                }, 3800);
+
+                addStep(() => {
+                    packet.style.left = "600px"; // Travels to AP
+                    lairOutput.innerHTML += `<br>> [00:10] Outpost AP forwards authentication request to Central Command (RADIUS Server)...`;
+                }, 3800);
+
+                addStep(() => {
+                    packet.style.left = "850px"; // Travels to RADIUS Central Command
+                    lairOutput.innerHTML += `<br>> [00:14] RADIUS Server verifies 007's clearance, logs time (AAA Accounting), and grants dynamic session key.`;
+                }, 3800);
+
+                addStep(() => {
+                    lairStatus.innerHTML = "ENTERPRISE DEFENSE HOLDS";
+                    lairStatus.style.color = "var(--accent-green)";
+                    lairOutput.innerHTML += `<br><br>> [00:18] <span style="color:#10b981">NO PRE-SHARED KEY DETECTED: Network uses individual 802.1X accounts.</span><br>> <span style="color:#10b981">STATUS: Zero shared passwords exist to steal or dictionary attack. Opposing spy repelled!</span>`;
+                }, 1000);
+
+            } else if (mode === 'open') {
+                addStep(() => {
+                    packet.style.top = "calc(50% + 40px)";
+                    lairStatus.innerHTML = "BREACH SUCCESSFUL";
+                    lairStatus.style.color = "var(--accent-red)";
+                    lairOutput.innerHTML += `<br><br>> [00:06] <span style="color:#ef4444">NO ENCRYPTION DETECTED! Raw unsealed plaintext payload floating in open airwaves.</span>`;
+                }, 3800);
+
+                addStep(() => {
+                    lairOutput.innerHTML += `<br>> [00:10] <span style="color:#ef4444">EXFILTRATED PAYLOAD: "Agent 007 Secret Passcode = MI6Secret2026"</span>`;
+                }, 3800);
+
+                addStep(() => {
+                    lairOutput.innerHTML += `<br>> [00:14] <span style="color:#ef4444">STATUS: Full compromise complete. Zero math effort required.</span>`;
+                }, 1000);
+
+            } else if (mode === 'wep') {
+                addStep(() => {
+                    packet.style.top = "calc(50% + 40px)";
+                    lairStatus.innerHTML = "CRACKING RC4 KEY...";
+                    lairStatus.style.color = "var(--accent-red)";
+                    lairOutput.innerHTML += `<br><br>> [00:06] Detected WEP RC4 Cipher. Collecting Initialization Vector (IV) packets...`;
+                }, 3500);
+
+                addStep(() => {
+                    lairOutput.innerHTML += `<br>> [00:09] Collected 10,000 IV packets... Short 24-bit IV forcing mathematical key repetition.`;
+                }, 3800);
+
+                addStep(() => {
+                    lairOutput.innerHTML += `<br>> [00:13] Collected 25,000 IV packets... Aligning repeating key bytes in statistical solver.`;
+                }, 3800);
+
+                addStep(() => {
+                    lairStatus.innerHTML = "MASTER KEY CRACKED";
+                    lairOutput.innerHTML += `<br><br>> [00:17] <span style="color:#ef4444">KEY RECOVERED: [ 0x3F 0x91 0xA2 0x88 0x07 ]</span><br>> <span style="color:#ef4444">STATUS: MI6 Network cracked in under 2 minutes!</span>`;
+                }, 1000);
+
+            } else if (mode === 'wpa2') {
+                addStep(() => {
+                    lairStatus.innerHTML = "HANDSHAKE CAPTURED";
+                    lairStatus.style.color = "var(--accent-gold)";
+                    lairOutput.innerHTML += `<br><br>> [00:06] Intercepted 4-Way PSK Handshake (ANonce, SNonce, MIC).`;
+                }, 3800);
+
+                addStep(() => {
+                    lairOutput.innerHTML += `<br>> [00:10] Live AES payload is securely scrambled, BUT Handshake tape is saved to disk.`;
+                }, 3800);
+
+                addStep(() => {
+                    lairOutput.innerHTML += `<br>> [00:14] Transferring recorded handshake tape to Lair GPU Supercomputer for Offline Dictionary Attack...`;
+                }, 4000);
+
+                const wordlist = [
+                    { word: "password123", result: "NO MATCH" },
+                    { word: "admin2026", result: "NO MATCH" },
+                    { word: "MI6Secret2026", result: "MATCH FOUND!" }
+                ];
+
+                wordlist.forEach((item, index) => {
+                    addStep(() => {
+                        lairOutput.innerHTML += `<br>> Testing Candidate Password #${index + 1}: <span style="color:white; font-weight:bold;">'${item.word}'</span> ... ${item.result === "MATCH FOUND!" ? '<span style="color:#ef4444">MATCH FOUND!</span>' : 'FAILED'}`;
+                    }, 3500);
+                });
+
+                addStep(() => {
+                    lairStatus.innerHTML = "OFFLINE DICTIONARY SUCCESS";
+                    lairStatus.style.color = "var(--accent-red)";
+                    lairOutput.innerHTML += `<br><br>> [00:26] <span style="color:#ef4444">SUCCESS: MIC signature matches candidate 'MI6Secret2026'!</span><br>> <span style="color:#ef4444">STATUS: Wi-Fi Password discovered offline. MI6 HQ had zero warning or lockout alerts.</span>`;
+                    packet.style.left = "600px";
+                }, 1000);
+
+            } else if (mode === 'wpa3') {
+                addStep(() => {
+                    lairStatus.innerHTML = "ANALYZING HANDSHAKE...";
+                    lairStatus.style.color = "var(--accent-gold)";
+                    lairOutput.innerHTML += `<br><br>> [00:06] Intercepted WPA3 SAE Dragonfly Handshake...`;
+                }, 3800);
+
+                addStep(() => {
+                    lairOutput.innerHTML += `<br>> [00:10] Analyzing mathematical exchange in recorded handshake tape...`;
+                }, 3800);
+
+                addStep(() => {
+                    lairOutput.innerHTML += `<br>> [00:14] <span style="color:#10b981">ZERO-KNOWLEDGE PROOF DETECTED: No testable password signatures exist in tape!</span>`;
+                }, 3800);
+
+                addStep(() => {
+                    lairOutput.innerHTML += `<br>> [00:18] Offline dictionary attack impossible. Attempting live password guessing directly at MI6 gate...`;
+                }, 3800);
+
+                addStep(() => {
+                    lairStatus.innerHTML = "ATTACK BLOCKED";
+                    lairStatus.style.color = "var(--accent-green)";
+                    lairOutput.innerHTML += `<br><br>> [00:22] <span style="color:#ef4444">ALERT: MI6 GATEKEEPER LOCKOUT TRIGGERED after 3 failed tries. SPY REPELLED!</span>`;
+                    packet.style.left = "600px";
+                }, 1000);
+            }
+
+            // Start queue execution
+            processQueue();
+        }
+
+        // Initialize display
+        updateInfo();
+    </script>
+</body>
+</html>
